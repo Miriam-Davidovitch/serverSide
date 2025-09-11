@@ -12,6 +12,8 @@ const searchCustomer = async (req, res) => {
   res.header('Access-Control-Allow-Headers', 'Content-Type');
   
   const searchTerm = req.params.searchTerm;
+  const isAdmin = req.query.admin === 'true';
+  
   try {
     // חיפוש לקוח לפי טלפון או מייל
     let { data: customer, error: customerError } = await supabase
@@ -20,8 +22,8 @@ const searchCustomer = async (req, res) => {
       .or(`phone.eq.${searchTerm},email.eq.${searchTerm}`)
       .single();
     
-    // אם לא נמצא לפי טלפון/מייל, ננסה לפי מספר הזמנה
-    if (customerError && !isNaN(searchTerm)) {
+    // אם לא נמצא לפי טלפון/מייל, ננסה לפי מספר הזמנה - רק למנהלים
+    if (customerError && !isNaN(searchTerm) && isAdmin) {
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .select('customerid')
