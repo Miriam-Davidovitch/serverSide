@@ -1,6 +1,7 @@
 require('dotenv').config({ path: '.env.local' });
 const express = require('express');
 const { searchCustomer, updateWeight } = require('./getData');
+const { getCustomersReport, getOrdersReport, getProductsReport, getFinancialReport } = require('./reports');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -28,7 +29,13 @@ app.get('/', (req, res) => {
     endpoints: {
       test: '/test',
       searchCustomer: '/api/customer/:searchTerm',
-      updateWeight: '/api/update-weight (POST)'
+      updateWeight: '/api/update-weight (POST)',
+      reports: {
+        customers: '/api/reports/customers',
+        orders: '/api/reports/orders',
+        products: '/api/reports/products',
+        financial: '/api/reports/financial'
+      }
     }
   });
 });
@@ -47,6 +54,12 @@ app.post('/api/update-weight', (req, res) => {
   updateWeight(req, res);
 });
 
+// נתיבי דוחות
+app.get('/api/reports/customers', getCustomersReport);
+app.get('/api/reports/orders', getOrdersReport);
+app.get('/api/reports/products', getProductsReport);
+app.get('/api/reports/financial', getFinancialReport);
+
 // For Vercel deployment
 module.exports = app;
 
@@ -56,6 +69,11 @@ if (require.main === module) {
     console.log(`🥩 מערכת מכירת בשר פועלת על http://localhost:${PORT}`);
     console.log('🔍 חיפוש לקוח: /api/customer/:searchTerm');
     console.log('⚖️ עדכון משקל: /api/update-weight');
+    console.log('📊 דוחות:');
+    console.log('  👥 לקוחות: /api/reports/customers');
+    console.log('  📋 הזמנות: /api/reports/orders');
+    console.log('  🥩 מוצרים: /api/reports/products');
+    console.log('  💰 כספי: /api/reports/financial');
     console.log('🧪 בדיקה: /test');
     console.log('Supabase URL:', process.env.SUPABASE_URL ? 'מוגדר' : 'חסר');
   });

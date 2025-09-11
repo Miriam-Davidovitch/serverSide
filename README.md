@@ -27,3 +27,9 @@ SUPABASE_ANON_KEY=your_supabase_key
 - `GET /api/customer/:searchTerm` - חיפוש לקוח
 - `POST /api/update-weight` - עדכון משקל
 - `GET /test` - בדיקת שרת
+
+### דוחות (הורדת קבצי אקסל)
+- `GET /api/reports/customers` - דוח לקוחות
+- `GET /api/reports/orders` - דוח הזמנות
+- `GET /api/reports/products` - דוח מוצרים
+- `GET /api/reports/financial` - דוח כספי
