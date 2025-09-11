@@ -35,10 +35,16 @@ app.post('/api/update-weight', (req, res) => {
   updateWeight(req, res);
 });
 
-app.listen(PORT, () => {
-  console.log(`🥩 מערכת מכירת בשר פועלת על http://localhost:${PORT}`);
-  console.log('🔍 חיפוש לקוח: /api/customer/:searchTerm');
-  console.log('⚖️ עדכון משקל: /api/update-weight');
-  console.log('🧪 בדיקה: /test');
-  console.log('Supabase URL:', process.env.SUPABASE_URL ? 'מוגדר' : 'חסר');
-});
+// For Vercel deployment
+module.exports = app;
+
+// For local development
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🥩 מערכת מכירת בשר פועלת על http://localhost:${PORT}`);
+    console.log('🔍 חיפוש לקוח: /api/customer/:searchTerm');
+    console.log('⚖️ עדכון משקל: /api/update-weight');
+    console.log('🧪 בדיקה: /test');
+    console.log('Supabase URL:', process.env.SUPABASE_URL ? 'מוגדר' : 'חסר');
+  });
+}
