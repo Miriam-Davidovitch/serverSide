@@ -21,6 +21,18 @@ app.use((req, res, next) => {
 // Middleware
 app.use(express.json());
 
+// Home route
+app.get('/', (req, res) => {
+  res.json({ 
+    message: '🥩 מערכת הזמנות בשר - Server API',
+    endpoints: {
+      test: '/test',
+      searchCustomer: '/api/customer/:searchTerm',
+      updateWeight: '/api/update-weight (POST)'
+    }
+  });
+});
+
 // Test route
 app.get('/test', (req, res) => {
   res.json({ message: 'Server is working!' });
