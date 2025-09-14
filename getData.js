@@ -132,4 +132,76 @@ const updateWeight = async (req, res) => {
   }
 };
 
-module.exports = { searchCustomer, updateWeight };
+// חיפוש לקוח לפי Customer ID (עבור QR Code)
+const searchCustomerById = async (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  
+  const customerId = req.params.customerId;
+  console.log('חיפוש לקוח לפי ID:', customerId);
+  
+  try {
+    // חיפוש לקוח לפי Customer ID
+    const { data: customer, error: customerError } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('customerid', parseInt(customerId))
+      
+      .single();
+    
+    if (customerError || !customer) {
+      return res.status(404).json({ error: 'לא נמצא לקוח' });
+    }
+    
+    // שליפת הזמנות ומוצרים
+    const { data: orders, error: ordersError } = await supabase
+      .from('orders')
+      .select(`
+        orderid,
+        orderdate,
+        orderproducts (
+          orderproductid,
+          finalweight,
+          paidprice,
+          didnt_get,
+          products (
+            productname,
+            avgweight,
+            priceperkg
+          )
+        )
+      `)
+      .eq('customerid', customer.customerid)
+      .order('orderdate', { ascending: false });
+    
+    if (ordersError) {
+      return res.status(500).json({ error: 'שגיאה בשליפת הזמנות' });
+    }
+    
+    // עיצוב הנתונים
+    const formattedOrders = orders.map(order => ({
+      orderid: order.orderid,
+      orderdate: order.orderdate,
+      products: order.orderproducts.map(op => ({
+        orderproductid: op.orderproductid,
+        productname: op.products.productname,
+        avgweight: op.products.avgweight,
+        priceperkg: op.products.priceperkg,
+        finalweight: op.finalweight,
+        paidprice: op.paidprice,
+        notreceived: op.didnt_get
+      }))
+    }));
+    
+    res.json({
+      customer,
+      orders: formattedOrders
+    });
+    
+  } catch (err) {
+    console.error('שגיאה בחיפוש לקוח:', err);
+    res.status(500).json({ error: 'שגיאת שרת' });
+  }
+};
+
+module.exports = { searchCustomer, searchCustomerById, updateWeight };
