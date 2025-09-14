@@ -1,6 +1,6 @@
 require('dotenv').config({ path: '.env.local' });
 const express = require('express');
-const { searchCustomer, searchCustomerById, updateWeight } = require('./getData');
+const { searchCustomer, searchCustomerById, updateWeight, updatePaymentStatus } = require('./getData');
 const { getCustomersReport, getOrdersReport, getProductsReport, getFinancialReport } = require('./reports');
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -57,6 +57,10 @@ app.get('/api/customer-by-id/:customerId', (req, res) => {
 
 app.post('/api/update-weight', (req, res) => {
   updateWeight(req, res);
+});
+
+app.post('/api/update-payment', (req, res) => {
+  updatePaymentStatus(req, res);
 });
 
 // נתיבי דוחות

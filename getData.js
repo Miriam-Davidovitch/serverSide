@@ -204,4 +204,41 @@ const searchCustomerById = async (req, res) => {
   }
 };
 
-module.exports = { searchCustomer, searchCustomerById, updateWeight };
+// עדכון סטטוס תשלום
+const updatePaymentStatus = async (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  
+  const { customerId, paid } = req.body;
+  
+  console.log('עדכון תשלום:', { customerId, paid });
+  
+  if (!customerId) {
+    return res.status(400).json({ error: 'חסר מספר לקוח' });
+  }
+  
+  try {
+    const { data, error } = await supabase
+      .from('customers')
+      .update({ 
+        'שילמתי': paid || false
+      })
+      .eq('customerid', customerId)
+      .select();
+    
+    console.log('תוצאת עדכון:', { data, error });
+    
+    if (error) {
+      console.error('שגיאת Supabase:', error);
+      return res.status(500).json({ error: 'שגיאה בעדכון: ' + error.message });
+    }
+    
+    res.json({ message: 'סטטוס תשלום עודכן בהצלחה', data });
+    
+  } catch (err) {
+    console.error('שגיאת שרת:', err);
+    res.status(500).json({ error: 'שגיאת שרת: ' + err.message });
+  }
+};
+
+module.exports = { searchCustomer, searchCustomerById, updateWeight, updatePaymentStatus };
