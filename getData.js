@@ -15,11 +15,11 @@ const searchCustomer = async (req, res) => {
   const isAdmin = req.query.admin === 'true';
   
   try {
-    // חיפוש לקוח לפי טלפון או מייל
+    // חיפוש לקוח לפי טלפון, מייל או תעודת זהות
     let { data: customer, error: customerError } = await supabase
       .from('customers')
       .select('*')
-      .or(`phone.eq.${searchTerm},email.eq.${searchTerm}`)
+      .or(`phone.eq.${searchTerm},email.eq.${searchTerm},customerid.eq.${searchTerm}`)
       .single();
     
     // אם לא נמצא לפי טלפון/מייל, ננסה לפי מספר הזמנה - רק למנהלים
