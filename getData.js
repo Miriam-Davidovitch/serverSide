@@ -98,34 +98,72 @@ const searchCustomer = async (req, res) => {
   }
 };
 
-// עדכון משקל סופי וסטטוס לא קבלתי
+// עדכון משקל סופי וסטטוס לא קבלתי - תומך בעדכונים מרובים
 const updateWeight = async (req, res) => {
-  console.log("saving whsigsd");
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Content-Type');
   
-  const { orderProductId, finalWeight, notReceived } = req.body;
-  
-  if (!orderProductId || !finalWeight) {
-    return res.status(400).json({ error: 'חסרים פרמטרים' });
-  }
+  const { updates, customerId, paymentStatus, orderProductId, finalWeight, notReceived } = req.body;
   
   try {
-    const { data, error } = await supabase
-      .from('orderproducts')
-      .update({ 
-        finalweight: finalWeight,
-        didnt_get: notReceived || false,
-        updatedat: new Date().toISOString()
-      })
-      .eq('orderproductid', orderProductId)
-      .select();
-    
-    if (error) {
-      return res.status(500).json({ error: 'שגיאה בעדכון: ' + error.message });
+    // אם זה עדכון מרובה (החדש)
+    if (updates && Array.isArray(updates)) {
+      // עדכון כל המוצרים
+      const updatePromises = updates.map(update => 
+        supabase
+          .from('orderproducts')
+          .update({ 
+            finalweight: update.finalWeight,
+            didnt_get: update.notReceived || false,
+            updatedat: new Date().toISOString()
+          })
+          .eq('orderproductid', update.orderProductId)
+      );
+      
+      const results = await Promise.all(updatePromises);
+      
+      // בדיקה שכל העדכונים הצליחו
+      const hasErrors = results.some(result => result.error);
+      if (hasErrors) {
+        return res.status(500).json({ error: 'שגיאה בעדכון חלק מהמוצרים' });
+      }
+      
+      // עדכון סטטוס תשלום אם נדרש
+      if (customerId && paymentStatus !== undefined) {
+        const { error: paymentError } = await supabase
+          .from('customers')
+          .update({ 'שילמתי': paymentStatus })
+          .eq('customerid', customerId);
+        
+        if (paymentError) {
+          return res.status(500).json({ error: 'שגיאה בעדכון סטטוס תשלום' });
+        }
+      }
+      
+      res.json({ message: 'כל הנתונים עודכנו בהצלחה' });
+      
+    } else {
+      // עדכון יחיד (תאימות לאחור)
+      if (!orderProductId || !finalWeight) {
+        return res.status(400).json({ error: 'חסרים פרמטרים' });
+      }
+      
+      const { data, error } = await supabase
+        .from('orderproducts')
+        .update({ 
+          finalweight: finalWeight,
+          didnt_get: notReceived || false,
+          updatedat: new Date().toISOString()
+        })
+        .eq('orderproductid', orderProductId)
+        .select();
+      
+      if (error) {
+        return res.status(500).json({ error: 'שגיאה בעדכון: ' + error.message });
+      }
+      
+      res.json({ message: 'נתונים עודכנו בהצלחה', data });
     }
-    
-    res.json({ message: 'נתונים עודכנו בהצלחה', data });
     
   } catch (err) {
     res.status(500).json({ error: 'שגיאת שרת: ' + err.message });
